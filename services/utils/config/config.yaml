@@ -1,0 +1,12 @@
+database:
+  host: postgres
+  port: 5432
+  user: user
+  password: password
+  name: userdb
+
+server:
+  port: ":8001"
+
+jwt:
+  secret: your_jwt_secret

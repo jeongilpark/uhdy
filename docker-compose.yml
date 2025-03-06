@@ -1,0 +1,84 @@
+services:
+  user:
+    image: docker.io/uhdy/user-service:latest
+    build:
+      context: services
+      dockerfile: user/Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:17.4-alpine3.21
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  loki:
+    image: grafana/loki:3.4.2
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    configs:
+      - source: loki-config
+        target: /etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:3.4
+    volumes:
+      - /var/log:/var/log
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - -config.file=/etc/promtail/config.yaml
+    configs:
+      - source: promtail-config
+        target: /etc/promtail/config.yaml
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - user
+
+volumes:
+  postgres-data:
+    driver: local
+  loki-data:
+    driver: local
+  grafana-storage:
+    driver: local
+  prometheus-data:
+    driver: local
+
+configs:
+  loki-config:
+    file: ./configs/loki/local-config.yaml
+  promtail-config:
+    file: ./configs/promtail/config.yaml
