@@ -2,41 +2,36 @@ package config
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
-type DatabaseConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Name     string `mapstructure:"name"`
-}
-
-type Config struct {
-	Database DatabaseConfig `mapstructure:"database"`
+type DefaultConfig struct {
+	Database struct {
+		Host     string `mapstructure:"host"`
+		Port     int    `mapstructure:"port"`
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+		Name     string `mapstructure:"name"`
+	} `mapstructure:"database"`
 
 	Server struct {
 		Port string `mapstructure:"port"`
 	} `mapstructure:"server"`
-
-	JWT struct {
-		Secret string `mapstructure:"secret"`
-	} `mapstructure:"jwt"`
 }
 
-var AppConfig Config
+var DefaultCfg DefaultConfig
 
-func init() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+func ReadConfig(cfgName string, cfgType string, cfgPath string, rawVal any) {
+	viper.SetConfigName(cfgName)
+	viper.SetConfigType(cfgType)
 
-	// Set the path where viper will look for the config file
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(cfgPath)
 
 	// Enable viper to read Environment Variables
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// Attempt to read the config file
 	if err := viper.ReadInConfig(); err != nil {
@@ -44,7 +39,12 @@ func init() {
 	}
 
 	// Unmarshal the config into the struct
-	if err := viper.Unmarshal(&AppConfig); err != nil {
+	if err := viper.Unmarshal(rawVal); err != nil {
 		log.Fatalf("Error reading config file: %v", err)
 	}
+	log.Println(rawVal)
+}
+
+func init() {
+	ReadConfig("default", "yaml", "/etc/uhdy", &DefaultCfg)
 }

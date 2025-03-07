@@ -1,0 +1,9 @@
+database:
+  host: postgres
+  port: 5432
+  user: user
+  password: password
+  name: uhdydb
+
+server:
+  port: :8000

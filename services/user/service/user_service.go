@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"os"
+	"encoding/base64"
 	"strings"
 	"time"
 
@@ -18,14 +18,17 @@ type UserService interface {
 }
 
 type userService struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	jwtKey []byte
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepository, jwtKey string) (UserService, error) {
+	decoded_key, err := base64.StdEncoding.DecodeString(jwtKey)
+	if err != nil {
+		return nil, err
+	}
+	return &userService{repo: repo, jwtKey: decoded_key}, nil
 }
-
-var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
 func (s *userService) SignUp(ctx context.Context, creds model.Credentials) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
@@ -57,7 +60,7 @@ func (s *userService) SignIn(ctx context.Context, creds model.Credentials) (stri
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(s.jwtKey)
 	if err != nil {
 		return "", err
 	}

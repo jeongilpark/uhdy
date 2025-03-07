@@ -23,11 +23,8 @@ WORKDIR /
 # Copy the binary and any other necessary files
 COPY --from=build /app/user/user-service /user-service
 
-# COPY the default configuration
-COPY ./utils/config/config.yaml /
-
 # Expose the port the service listens on
-EXPOSE 8001
+EXPOSE 8000
 
 # Command to run the service
 ENTRYPOINT ["/user-service"]

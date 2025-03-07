@@ -60,7 +60,7 @@ down:
 
 # Apply Database DDL
 apply_ddl: up_postgres
-	./scripts/apply_ddl.sh 'postgres://user:password@localhost:5432/userdb?sslmode=disable' './services/*/sqlc/schema.sql'
+	./scripts/apply_ddl.sh ./services/*/sqlc/schema.sql
 
 up_postgres:
 	@$(MAKE) up service=postgres

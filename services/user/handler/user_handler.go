@@ -14,14 +14,16 @@ type UserHandler struct {
 	userService service.UserService
 }
 
-func NewUserHandler(user string, pw string, host string, port int, dbname string) *UserHandler {
-	userRepo := repository.NewUserPostgresRepository(user, pw, host, port, dbname)
-	userService := service.NewUserService(userRepo)
-	return &UserHandler{userService: userService}
+func NewUserHandler(repo repository.UserRepository, jwtKey string) (*UserHandler, error) {
+	userService, err := service.NewUserService(repo, jwtKey)
+	if err != nil {
+		return nil, err
+	}
+	return &UserHandler{userService: userService}, nil
 }
 
 // signUp handles user registration
-func (h *UserHandler) SignUp(ctx context.Context, input *model.AuthInput) (*struct{}, error) {
+func (h *UserHandler) SignUp(ctx context.Context, input *model.AuthRequest) (*struct{}, error) {
 	err := h.userService.SignUp(ctx, input.Body)
 	if err == nil {
 		return nil, nil
@@ -30,7 +32,7 @@ func (h *UserHandler) SignUp(ctx context.Context, input *model.AuthInput) (*stru
 }
 
 // signIn handles user login
-func (h *UserHandler) SignIn(ctx context.Context, input *model.AuthInput) (*model.SignInResponse, error) {
+func (h *UserHandler) SignIn(ctx context.Context, input *model.AuthRequest) (*model.SignInResponse, error) {
 	token, err := h.userService.SignIn(ctx, input.Body)
 	if err == nil {
 		body := model.AuthToken{Token: token}

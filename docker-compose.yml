@@ -5,20 +5,23 @@ services:
       context: services
       dockerfile: user/Dockerfile
     ports:
-      - "8001:8001"
+      - "8001:8000"
     env_file:
       - .env
+    volumes:
+      - type: bind
+        source: ./configs/services
+        target: /etc/uhdy
+        read_only: true
     depends_on:
       - postgres
 
   postgres:
     image: postgres:17.4-alpine3.21
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: userdb
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -63,7 +66,9 @@ services:
       - "9090:9090"
     volumes:
       - prometheus-data:/prometheus
-      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
     depends_on:
       - user
 
@@ -82,3 +87,5 @@ configs:
     file: ./configs/loki/local-config.yaml
   promtail-config:
     file: ./configs/promtail/config.yaml
+  prometheus-config:
+    file: ./configs/prometheus/prometheus.yml

@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Ensure we have at least two arguments
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <database-url> <file-pattern> ..."
-    echo "Example: $0 'postgres://username:password@localhost:5432/yourdbname?sslmode=disable' '*/sqlc/schema.sql'"
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <file-pattern> ..."
+    echo "Example: $0 '*/sqlc/schema.sql'"
     exit 1
 fi
 
-DATABASE_URL=$1
-shift 1
+DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?sslmode=disable"
 PATTERNS=$@
 
+echo "Connecting $DATABASE_URL ..."
 # Loop through each pattern and apply the SQL files
 for PATTERN in $PATTERNS; do
     for FILE in $PATTERN; do

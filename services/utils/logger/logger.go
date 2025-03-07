@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,12 +38,10 @@ func InitLoggerMiddleware() fiber.Handler {
 		if c.Response().StatusCode() >= http.StatusInternalServerError {
 			reqBody := c.Request().Body()
 			resBody := c.Response().Body()
-			stackTrace := fmt.Sprintf("%+v", err)
 			entry.WithFields(logrus.Fields{
 				"request_body":  string(reqBody),
 				"status_code":   c.Response().StatusCode(),
 				"response_body": string(resBody),
-				"stackTrace":    stackTrace,
 			}).Error("Internal Server Error")
 		}
 
